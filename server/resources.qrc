@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>imgs/check.png</file>
+        <file>imgs/ozwlogo.png</file>
+        <file>imgs/progress.gif</file>
+    </qresource>
+</RCC>

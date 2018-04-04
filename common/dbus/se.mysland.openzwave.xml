@@ -1,0 +1,33 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="se.mysland.openzwave">
+    <signal name="statusSet">
+      <arg name="deviceId"   type="u" direction="out"/>
+      <arg name="statusCode" type="u" direction="out"/>
+    </signal>
+    <signal name="statusSetAck">
+      <arg name="requestOk"  type="u" direction="out"/>
+    </signal>
+
+    <!-- Daemon sends -->
+    <signal name="publishNrNodes">
+      <arg name="nodeNr"     type="u" direction="out"/>
+    </signal>
+    <!-- Client responds -->
+    <signal name="publishNrNodesAck">
+    </signal>
+
+    <!-- Daemon sends -->
+    <signal name="publishNodeDetails">
+      <arg name="nodeId"        type="u" direction="out"/>
+      <arg name="nodeIdMinVal"  type="u" direction="out"/>
+      <arg name="nodeIdMaxVal"  type="u" direction="out"/>
+    </signal>
+    <!-- Client responds -->
+    <signal name="publishNodeDetailsAck">
+      <arg name="nodeId"        type="u" direction="out"/>
+    </signal>
+
+  </interface>
+</node>
