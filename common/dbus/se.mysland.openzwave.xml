@@ -9,7 +9,8 @@
       <arg name="statusCode" type="u" direction="out"/>
     </signal>
     <signal name="statusSetAck">
-      <arg name="requestOk"  type="u" direction="out"/>
+      <arg name="requestNode"   type="u" direction="out"/>
+      <arg name="requestOk"     type="b" direction="out"/>
     </signal>
 
     <!-- Client asks if server ready -->

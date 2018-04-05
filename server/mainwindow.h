@@ -75,6 +75,8 @@ signals:
 private:
     void        appendText(QString const & txt);
     bool        ToggleSwitchBinary(const int node_Id, bool status);
+    bool        ToggleSwitchMultilevel(const int node_Id,
+                                       const uint8 level);
     void        StopOpenZWave();
     bool        validNodeId(uint devId);
     bool        validValue(uint devId, uint val);

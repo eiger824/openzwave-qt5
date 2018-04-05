@@ -27,6 +27,7 @@
 #include "value_classes/ValueBool.h"
 #include "platform/Log.h"
 #include "command_classes/SwitchBinary.h"
+#include "command_classes/SwitchMultilevel.h"
 #include "defs.h"
 
 // Bring on OpenZwave namespace
@@ -110,7 +111,6 @@ void OpenZWaveBackgroundThread::run()
     emit resultReady(result);
 }
 
-
 bool MainWindow::ToggleSwitchBinary(const int node_Id, bool status)
 {
     bool result {true};
@@ -127,6 +127,32 @@ bool MainWindow::ToggleSwitchBinary(const int node_Id, bool status)
                 if (value.GetCommandClassId() == SwitchBinary::StaticGetCommandClassId())
                 {
                     result = Manager::Get()->SetValue(value, status);
+                }
+            }
+        }
+    }
+    // Unlock critical section
+    pthread_mutex_unlock (&g_criticalSection);
+    return result;
+}
+
+bool MainWindow::ToggleSwitchMultilevel(const int node_Id, const uint8 level)
+{
+    bool result {true};
+    // Lock critical section
+    pthread_mutex_lock (&g_criticalSection);
+
+    for (auto const & node : g_nodes)
+    {
+        if (node->m_nodeId == node_Id)
+        {
+            for (auto const & value : node->m_values)
+            {
+                if (value.GetCommandClassId() == SwitchMultilevel::StaticGetCommandClassId())
+                {
+                    result = Manager::Get()->SetValue(value, level);
+                    // Avoid repetitions ...
+                    break;
                 }
             }
         }
@@ -311,7 +337,7 @@ bool MainWindow::validValue(uint devId, uint val)
     case SWITCH_BINARY_ID:
         return val < 2; /* 0 or 1 */
     case SWITCH_MULTILEVEL_ID:
-        return val < 100; /* TODO: check this, I think it's from 0 to 99 */
+        return val < 100; /* 0 to 99, see page 518 of Specification */
     }
 }
 
@@ -322,18 +348,27 @@ void MainWindow::statusSetSlot(uint devId, uint statusCode)
                QString::number(statusCode));
     if (readyToServe)
     {
+        QDBusMessage msg = QDBusMessage::createSignal("/",
+                                                      "se.mysland.openzwave",
+                                                      "statusSetAck");
+        QDBusConnection conn = QDBusConnection::sessionBus();
+
         // Check if devId is a valid one
         if (!validNodeId(devId))
         {
             appendText("Request for non-existent NodeID \"" +
                        QString::number(devId) + "\", skipping request.");
+            msg << static_cast<uint>(false);
+            conn.send(msg);
             return;
         }
         if (!validValue(devId, statusCode))
         {
             appendText("Invalid status '" +
-                       QString::number(statusCode) + "'for NodeID \"" +
+                       QString::number(statusCode) + "' for NodeID \"" +
                        QString::number(devId) + "\", skipping request.");
+            msg << static_cast<uint>(false);
+            conn.send(msg);
             return;
         }
         bool result;
@@ -345,15 +380,14 @@ void MainWindow::statusSetSlot(uint devId, uint statusCode)
             break;
         case SWITCH_MULTILEVEL_ID:
             //TODO: implement
-            result = false;
-            appendText("Sorry, currently not implemented.");
+            result = ToggleSwitchMultilevel(SWITCH_MULTILEVEL_ID,
+                                            static_cast<uint8>(statusCode));
             break;
         }
 
         // Write back response code
-        QDBusMessage msg = QDBusMessage::createSignal("/", "se.mysland.openzwave", "statusSetAck");
-        msg << static_cast<uint>(result);
-        QDBusConnection::sessionBus().send(msg);
+        msg << devId << result;
+        conn.send(msg);
     }
     else
     {
@@ -427,6 +461,8 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
     // Must do this inside a critical section to avoid conflicts with the main thread
     pthread_mutex_lock( &g_criticalSection );
 
+     cout << "Notification! Type = " << _notification->GetAsString() << endl;
+
     switch( _notification->GetType() )
     {
     case Notification::Type_ValueAdded:
@@ -458,7 +494,6 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
 
     case Notification::Type_ValueChanged:
     {
-        // One of the node values has changed
         if( NodeInfo* nodeInfo = GetNodeInfo( _notification ) )
         {
             nodeInfo = nodeInfo;		// placeholder for real action
