@@ -77,6 +77,7 @@ private:
     bool        ToggleSwitchBinary(const int node_Id, bool status);
     void        StopOpenZWave();
     bool        validNodeId(uint devId);
+    bool        validValue(uint devId, uint val);
 
 private slots:
     void        statusSetSlot(uint devId, uint statusCode);

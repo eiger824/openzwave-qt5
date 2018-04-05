@@ -89,7 +89,5 @@ int main(int argc, char *argv[])
     if (graphic)
         w.show();
 
-    cout << "\n\n\n\n\n\n\n\n\n\Entering event loop!\n\n\n\n\n";
-
     return a.exec();
 }

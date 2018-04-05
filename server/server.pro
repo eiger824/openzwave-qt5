@@ -34,7 +34,7 @@ SOURCES += \
 
 HEADERS += \
         mainwindow.h \
-    defs.h \
+    ../common/defs.h \
     ../common/timespec.h
 
 FORMS += \

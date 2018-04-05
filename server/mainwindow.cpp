@@ -198,7 +198,7 @@ MainWindow::MainWindow(bool _graphic,
     emit startOZWInitialization();
 
     // Start animation
-    QMovie * movie = new QMovie("./progress.gif");
+    QMovie * movie = new QMovie(":/images/imgs/progress.gif");
     movie->setScaledSize(ui->label_2->size());
     ui->label_2->setMovie(movie);
     movie->start();
@@ -240,7 +240,7 @@ void MainWindow::InitOpenZWaveDone(bool res)
     QMovie * mv = ui->label_2->movie();
     mv->stop();
     delete mv;
-    QPixmap pm{"check.png"};
+    QPixmap pm{":/images/imgs/check.png"};
     ui->label_2->setPixmap(pm);
     // Now we want to publish the available nodes to the client
     broadcastNodes();
@@ -303,6 +303,18 @@ bool MainWindow::validNodeId(uint devId)
     return false;
 }
 
+bool MainWindow::validValue(uint devId, uint val)
+{
+    // TODO: check this via OpenZWave
+    switch (devId)
+    {
+    case SWITCH_BINARY_ID:
+        return val < 2; /* 0 or 1 */
+    case SWITCH_MULTILEVEL_ID:
+        return val < 100; /* TODO: check this, I think it's from 0 to 99 */
+    }
+}
+
 void MainWindow::statusSetSlot(uint devId, uint statusCode)
 {
     appendText("Received request: STATUS(" +
@@ -317,9 +329,28 @@ void MainWindow::statusSetSlot(uint devId, uint statusCode)
                        QString::number(devId) + "\", skipping request.");
             return;
         }
+        if (!validValue(devId, statusCode))
+        {
+            appendText("Invalid status '" +
+                       QString::number(statusCode) + "'for NodeID \"" +
+                       QString::number(devId) + "\", skipping request.");
+            return;
+        }
+        bool result;
+        switch (devId)
+        {
+        case SWITCH_BINARY_ID:
+            result = ToggleSwitchBinary(SWITCH_BINARY_ID,
+                                        static_cast<bool>(statusCode));
+            break;
+        case SWITCH_MULTILEVEL_ID:
+            //TODO: implement
+            result = false;
+            appendText("Sorry, currently not implemented.");
+            break;
+        }
 
-        bool result = ToggleSwitchBinary(SWITCH_BINARY_ID,
-                                         static_cast<bool>(statusCode));
+        // Write back response code
         QDBusMessage msg = QDBusMessage::createSignal("/", "se.mysland.openzwave", "statusSetAck");
         msg << static_cast<uint>(result);
         QDBusConnection::sessionBus().send(msg);

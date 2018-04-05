@@ -6,18 +6,7 @@
 #include <QList>
 #include <QMutex>
 
-class NodeDetails
-{
-public:
-    NodeDetails(uint _nodeId, uint _minVal, uint _maxVal) :
-        nodeId{_nodeId},
-        minVal{_minVal},
-        maxVal{_maxVal} {}
-public:
-    uint nodeId;
-    uint minVal;
-    uint maxVal;
-};
+#include "defs.h"
 
 namespace Ui {
 class MainWindow;

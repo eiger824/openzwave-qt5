@@ -1,18 +1,14 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2018-04-03T10:49:47
-#
-#-------------------------------------------------
+QT -= gui
 
-QT       += core gui dbus
+QT  += core dbus
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+CONFIG += c++17 console
+CONFIG -= app_bundle
 
-TARGET = ozw-client
-TEMPLATE = app
+TARGET = ozw-proxy-client
 
 # The following define makes your compiler emit warnings if you use
-# any feature of Qt which has been marked as deprecated (the exact warnings
+# any feature of Qt which as been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -24,22 +20,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 QMAKE_INCDIR += ../common ${OZW_SRC}
 
-SOURCES += \
-        main.cpp \
-        mainwindow.cpp
+SOURCES += main.cpp \
+    openzwaveproxyclient.cpp
 
 HEADERS += \
-        mainwindow.h \
-    ../common/defs.h
-
-FORMS += \
-        mainwindow.ui
+    openzwaveproxyclient.h
 
 DBUS_ADAPTORS   += ../common/dbus/se.mysland.openzwave.xml
 DBUS_INTERFACES += ../common/dbus/se.mysland.openzwave.xml
 
 DISTFILES += \
     ../common/dbus/se.mysland.openzwave.xml
-
-RESOURCES += \
-    resources.qrc
