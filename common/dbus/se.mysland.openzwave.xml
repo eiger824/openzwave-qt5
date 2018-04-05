@@ -2,12 +2,23 @@
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node>
   <interface name="se.mysland.openzwave">
+
+    <!-- Status get / set -->
     <signal name="statusSet">
       <arg name="deviceId"   type="u" direction="out"/>
       <arg name="statusCode" type="u" direction="out"/>
     </signal>
     <signal name="statusSetAck">
       <arg name="requestOk"  type="u" direction="out"/>
+    </signal>
+
+    <!-- Client asks if server ready -->
+    <signal name="serverReady">
+    </signal>
+    <signal name="serverReadyAck">
+        <arg name="ready"    type="b" direction="out"/>
+    </signal>
+    <signal name="requestNodeTransfer">
     </signal>
 
     <!-- Daemon sends -->

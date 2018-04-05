@@ -40,6 +40,7 @@ private slots:
     void statusSetAckSlot(uint responseCode);
     void publishNodeDetailsSlot(uint nodeID ,uint minVal ,uint maxVal);
     void publishNrNodesSlot(uint _nrNodes);
+    void serverReadyAckSlot(bool ready);
     void on_pushButton_2_clicked();
 
     void on_comboBox_currentTextChanged(const QString &arg1);

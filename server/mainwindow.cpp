@@ -172,8 +172,22 @@ MainWindow::MainWindow(bool _graphic,
                  this,
                  SLOT(publishNrSlotsRecvAck())); /* Run slot when client acknowledges receival */
 
+    conn.connect(QString{},
+                 QString{},
+                 "se.mysland.openzwave",
+                 "serverReady",
+                 this,
+                 SLOT(serverReadySlot()));
+    conn.connect(QString{},
+                 QString{},
+                 "se.mysland.openzwave",
+                 "requestNodeTransfer",
+                 this,
+                 SLOT(broadcastNodes()));
+
     // We want to free and stop the engine when exiting the application
     connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(beforeExit()));
+
     /*
      * Initialize OpenZWave engine, but we don't want to do this in the same thread
      * that creates the GUI (OpenZWave does this internally), but we want to finish
@@ -236,12 +250,25 @@ void MainWindow::InitOpenZWaveDone(bool res)
 // This will be called every BROADCAST_TIMEOUT secs to notify changes to client
 void MainWindow::broadcastNodes()
 {
+    if (timer->interval() < BROADCAST_TIMEOUT)
+    {
+        timer->start(BROADCAST_TIMEOUT);
+    }
     appendText("Notifying clients");
     // First, publish the number of nodes discovered
     QDBusMessage msg = QDBusMessage::createSignal("/",
                                                   "se.mysland.openzwave",
                                                   "publishNrNodes");
     msg << static_cast<uint>(g_nodes.size());
+    QDBusConnection::sessionBus().send(msg);
+}
+
+void MainWindow::serverReadySlot()
+{
+    QDBusMessage msg = QDBusMessage::createSignal("/",
+                                                  "se.mysland.openzwave",
+                                                  "serverReadyAck");
+    msg << readyToServe;
     QDBusConnection::sessionBus().send(msg);
 }
 

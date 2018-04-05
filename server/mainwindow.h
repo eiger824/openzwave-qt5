@@ -86,6 +86,7 @@ private slots:
     void        beforeExit();
     void        InitOpenZWaveDone(bool res);
     void        broadcastNodes();
+    void        serverReadySlot();
 
 private:
     OpenZWaveBackgroundThread * wt;

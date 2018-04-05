@@ -40,6 +40,14 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(publishNrNodesSlot(uint)));
     connect(iface, SIGNAL(publishNodeDetails(uint,uint,uint)),
             this, SLOT(publishNodeDetailsSlot(uint,uint,uint)));
+    connect(iface, SIGNAL(serverReadyAck(bool)),
+            this, SLOT(serverReadyAckSlot(bool)));
+
+    // Ask the server if it is ready to accept commands
+    QDBusMessage msg = QDBusMessage::createSignal("/",
+                                                  "se.mysland.openzwave",
+                                                  "serverReady");
+    conn.send(msg);
 }
 
 MainWindow::~MainWindow()
@@ -138,6 +146,24 @@ void MainWindow::publishNrNodesSlot(uint _nrNodes)
                                                   "se.mysland.openzwave",
                                                   "publishNrNodesAck");
     conn.send(msg);
+}
+
+void MainWindow::serverReadyAckSlot(bool ready)
+{
+    if (ready)
+    {
+        // Then request that the daemon sends us the nodes
+        QDBusMessage msg = QDBusMessage::createSignal("/",
+                                                      "se.mysland.openzwave",
+                                                      "requestNodeTransfer");
+        QDBusConnection::sessionBus().send(msg);
+    }
+    else
+    {
+        appendText(ui->plainTextEdit,
+                   "OpenZWave daemon is still initializing...",
+                   true);
+    }
 }
 
 void MainWindow::on_pushButton_2_clicked()
