@@ -1,0 +1,91 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {display:none;}
+
+.toggle_button {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.toggle_button:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .toggle_button {
+  background-color: #2196F3;
+}
+
+input:focus + .toggle_button {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .toggle_button:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.toggle_button.round {
+  border-radius: 34px;
+}
+
+.toggle_button.round:before {
+  border-radius: 50%;
+}
+
+</style>
+
+</head>
+<body>
+
+<h2>Toggle Switch Binary</h2>
+
+<label class="switch">
+  <input type="checkbox" checked>
+  <span class="toggle_button round"></span>
+</label>
+
+<br>
+<h2>Set Switch Multilevel</h2>
+<div class="slidecontainer">
+    <input type="range" min="0" max="99" value="0" id="switchMultilevelSlider">
+    <label for="switchMultilevelSlider" id="currentSliderValue">Current value</label>
+
+<script>
+    var slider = document.getElementById("switchMultilevelSlider");
+var output = document.getElementById("currentSliderValue");
+output.innerHTML = slider.value;
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+}
+</script>
+
+</body>
+</html> 
+
