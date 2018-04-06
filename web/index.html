@@ -65,16 +65,24 @@ input:checked + .toggle_button:before {
 
 <h2>Toggle Switch Binary</h2>
 
+<form action="/action_switch_binary.php" method="post" id="form1">
 <label class="switch">
-  <input type="checkbox" checked>
+  <input type="checkbox" name="binarySwitch" checked>
   <span class="toggle_button round"></span>
 </label>
+</form>
+<button type="submit" form="form1"  value="Submit">Toggle</button>
+
 
 <br>
 <h2>Set Switch Multilevel</h2>
+<form action="/action_switch_multilevel.php" method="post" id="form2">
 <div class="slidecontainer">
-    <input type="range" min="0" max="99" value="0" id="switchMultilevelSlider">
+    <input type="range" min="0" max="99" value="0" id="switchMultilevelSlider" name="multilevelSwitch">
     <label for="switchMultilevelSlider" id="currentSliderValue">Current value</label>
+</form>
+<br>
+<button type="submit" form="form2"  value="Submit2">Set</button>
 
 <script>
     var slider = document.getElementById("switchMultilevelSlider");
