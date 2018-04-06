@@ -17,12 +17,12 @@
 $status = 0;
 if (isset($_POST["binarySwitch"])) {
     $status = 1;
-    echo "Switch will be turned on";
+    echo "Switch will be turned on.";
 } else {
     $status = 0;
-    echo "Switch will be turned off";
+    echo "Switch will be turned off.";
 }
-$result = exec('ozw-proxy-client -n21 -v'.$status);
+$result = exec('/usr/bin/ozw-proxy-client -n21 -v'.$status);
 ?>
 
 <br>

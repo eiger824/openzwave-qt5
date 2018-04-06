@@ -16,9 +16,8 @@
 <?php 
 
 $level = $_POST["multilevelSwitch"];
-echo "Will set multilevel dimmer to level ".$level;
-$result = exec('ozw-proxy-client -n15 -v'.$level);
-
+echo 'Will set multilevel dimmer to level: '.$level.'.';
+$result = exec('/usr/bin/ozw-proxy-client -n15 -v'.$level);
 ?>
 
 <br>
