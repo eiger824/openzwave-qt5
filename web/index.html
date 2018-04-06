@@ -2,6 +2,17 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+
+img {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+.content{
+    width: 50%;
+    text-align: center;
+    margin: auto;
+}
 .switch {
   position: relative;
   display: inline-block;
@@ -62,6 +73,7 @@ input:checked + .toggle_button:before {
 
 </head>
 <body>
+    <div class="content">
 
 <h2>Toggle Switch Binary</h2>
 
@@ -83,6 +95,9 @@ input:checked + .toggle_button:before {
 </form>
 <br>
 <button type="submit" form="form2"  value="Submit2">Set</button>
+<br>
+<br>
+<img src="ozwlogo.png" width="240" height="120">
 
 <script>
     var slider = document.getElementById("switchMultilevelSlider");
@@ -94,6 +109,7 @@ slider.oninput = function() {
 }
 </script>
 
+</div>
 </body>
 </html> 
 
