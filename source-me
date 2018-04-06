@@ -10,7 +10,7 @@ fi
 if [[  -d $HOME/open-zwave ]]; then
     echo "Already cloned."
 else
-    git clone https://github.com/eiger824/open-zwave.git $HOME/open-zwave
+    git clone --depth=1 https://github.com/eiger824/open-zwave.git $HOME/open-zwave
 fi
 
 # Export env variables
