@@ -33,12 +33,19 @@ OpenZWaveProxyClient::OpenZWaveProxyClient(uint _nodeId, uint _value,
             this, SLOT(serverReadyAckSlot(bool)));
     connect(iface, SIGNAL(statusSetAck(uint,bool)),
             this, SLOT(statusSetAckSlot(uint,bool)));
+    connect(iface, SIGNAL(statusChangedCfm(uint)),
+            this, SLOT(statusChangedCfmSlot(uint)));
 
     // Ask the server if it is ready to accept commands
     QDBusMessage msg = QDBusMessage::createSignal("/",
                                                   "se.mysland.openzwave",
                                                   "serverReady");
-    conn.send(msg);
+    if (!conn.send(msg))
+    {
+        QDBusError err = conn.lastError();
+        cerr << "Error sending message: "
+             << err.message().toStdString() << endl;
+    }
 }
 
 void OpenZWaveProxyClient::serverReadyAckSlot(bool res)
@@ -60,5 +67,14 @@ void OpenZWaveProxyClient::serverReadyAckSlot(bool res)
 void OpenZWaveProxyClient::statusSetAckSlot(uint nodeId, bool res)
 {
     // Simply exit application with exit code in `!res`
-    qApp->exit(static_cast<int>(!res));
+    if (!res)
+    {
+        qApp->exit(1); // Exit with error if the operation was unsuccessful
+    }
+}
+
+void OpenZWaveProxyClient::statusChangedCfmSlot(uint nodeId)
+{
+    cout << "Status was changed! Exiting program" << endl;
+    qApp->exit(0);
 }

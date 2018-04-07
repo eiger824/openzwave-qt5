@@ -26,7 +26,8 @@ private:
 
 private slots:
     void on_pushButton_clicked();
-    void statusSetAckSlot(uint responseCode);
+    void statusSetAckSlot(uint devId, bool result);
+    void statusChangedCfgSlot(uint devId);
     void publishNodeDetailsSlot(uint nodeID ,uint minVal ,uint maxVal);
     void publishNrNodesSlot(uint _nrNodes);
     void serverReadyAckSlot(bool ready);

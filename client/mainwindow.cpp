@@ -34,14 +34,16 @@ MainWindow::MainWindow(QWidget *parent) :
                                        QString{},
                                        conn,
                                        this);
-    connect(iface, SIGNAL(statusSetAck(uint)),
-            this, SLOT(statusSetAckSlot(uint)));
+    connect(iface, SIGNAL(statusSetAck(uint,bool)),
+            this, SLOT(statusSetAckSlot(uint,bool)));
     connect(iface, SIGNAL(publishNrNodes(uint)),
             this, SLOT(publishNrNodesSlot(uint)));
     connect(iface, SIGNAL(publishNodeDetails(uint,uint,uint)),
             this, SLOT(publishNodeDetailsSlot(uint,uint,uint)));
     connect(iface, SIGNAL(serverReadyAck(bool)),
             this, SLOT(serverReadyAckSlot(bool)));
+    connect(iface, SIGNAL(statusChangedCfm(uint)),
+            this, SLOT(statusChangedCfgSlot(uint)));
 
     // Ask the server if it is ready to accept commands
     QDBusMessage msg = QDBusMessage::createSignal("/",
@@ -101,10 +103,17 @@ bool MainWindow::isNodeNew(NodeDetails *nd)
     return true;
 }
 
-void MainWindow::statusSetAckSlot(uint responseCode)
+void MainWindow::statusSetAckSlot(uint devId, bool result)
 {
-    appendText(ui->plainTextEdit,
-               responseCode ? "[ok]" : "[fail]", true);
+    if (!result)
+    {
+        appendText(ui->plainTextEdit, "[fail]", true);
+    }
+}
+
+void MainWindow::statusChangedCfgSlot(uint devId)
+{
+    appendText(ui->plainTextEdit, "[ok]", true);
 }
 
 void MainWindow::publishNodeDetailsSlot(uint nodeID, uint minVal, uint maxVal)

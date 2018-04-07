@@ -51,3 +51,7 @@ QMAKE_LIBS += -L${OZW_ROOT} -lopenzwave
 
 RESOURCES += \
     resources.qrc
+
+target.path = /usr/bin
+
+INSTALLS += target

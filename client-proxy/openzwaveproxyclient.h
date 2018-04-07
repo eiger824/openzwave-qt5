@@ -15,6 +15,7 @@ public:
 public slots:
     void serverReadyAckSlot(bool res);
     void statusSetAckSlot(uint nodeId, bool res);
+    void statusChangedCfmSlot(uint nodeId);
 
 private:
     uint nodeId;

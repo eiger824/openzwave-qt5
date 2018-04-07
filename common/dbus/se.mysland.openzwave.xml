@@ -13,6 +13,11 @@
       <arg name="requestOk"     type="b" direction="out"/>
     </signal>
 
+    <!-- Remote node has changed its status and confirms -->
+    <signal name="statusChangedCfm">
+        <arg name="nodeId"  type="u"  direction="out"/>
+    </signal>
+
     <!-- Client asks if server ready -->
     <signal name="serverReady">
     </signal>

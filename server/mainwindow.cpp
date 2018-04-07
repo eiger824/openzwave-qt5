@@ -49,6 +49,8 @@ static pthread_mutex_t g_criticalSection;
 static pthread_cond_t  initCond  = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t initMutex = PTHREAD_MUTEX_INITIALIZER;
 
+MainWindow * MainWindow::instance { NULL };
+
 NodeInfo *  GetNodeInfo     ( const OpenZWave::Notification * _notification );
 void        OnNotification  ( const OpenZWave::Notification * _notification,
                               void * _context);
@@ -178,6 +180,8 @@ MainWindow::MainWindow(bool _graphic,
     ui->setupUi(this);
     appendText("Server initialized! Listening to the bus...");
 
+    instance = this;
+
     setWindowTitle("OpenZWave daemon");
 
     // Add D-BUs interface and connect to it
@@ -239,6 +243,21 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::AcknowledgeTransferToNode(uint nodeId)
+{
+    QDBusMessage msg = QDBusMessage::createSignal("/",
+                                                  "se.mysland.openzwave",
+                                                  "statusChangedCfm");
+    QDBusConnection conn = QDBusConnection::sessionBus();
+    msg << nodeId;
+
+    if (!conn.send(msg))
+    {
+        cerr << "Error, could not send signal: "
+             << conn.lastError().message().toStdString() << endl;
+    }
+}
+
 void MainWindow::InitOpenZWave()
 {
     appendText("Initializing OpenZWave engine ...");
@@ -291,6 +310,7 @@ void MainWindow::broadcastNodes()
 
 void MainWindow::serverReadySlot()
 {
+    appendText("Someone just queried my state. Replying...");
     QDBusMessage msg = QDBusMessage::createSignal("/",
                                                   "se.mysland.openzwave",
                                                   "serverReadyAck");
@@ -358,7 +378,7 @@ void MainWindow::statusSetSlot(uint devId, uint statusCode)
         {
             appendText("Request for non-existent NodeID \"" +
                        QString::number(devId) + "\", skipping request.");
-            msg << static_cast<uint>(false);
+            msg << devId << static_cast<uint>(false);
             conn.send(msg);
             return;
         }
@@ -367,7 +387,7 @@ void MainWindow::statusSetSlot(uint devId, uint statusCode)
             appendText("Invalid status '" +
                        QString::number(statusCode) + "' for NodeID \"" +
                        QString::number(devId) + "\", skipping request.");
-            msg << static_cast<uint>(false);
+            msg << devId << static_cast<uint>(false);
             conn.send(msg);
             return;
         }
@@ -596,6 +616,18 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
 
     case Notification::Type_DriverReset:
     case Notification::Type_Notification:
+    {
+        cout << "Type Notification!! Byte is: " << static_cast<int>(_notification->GetByte()) << endl;
+        switch (_notification->GetByte())
+        {
+        case Notification::NotificationCode::Code_MsgComplete:
+            cout << "Message complete for node " << static_cast<int>(_notification->GetNodeId())
+                 << "! Sending ACK over the bus..." << endl;
+            MainWindow * w = MainWindow::Get();
+            w->AcknowledgeTransferToNode(_notification->GetNodeId());
+            break;
+        }
+    }
     case Notification::Type_NodeNaming:
     case Notification::Type_NodeProtocolInfo:
     case Notification::Type_NodeQueriesComplete:

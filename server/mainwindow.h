@@ -66,6 +66,8 @@ public:
                         QString const & _configPath,
                         QWidget *parent = 0);
     ~MainWindow();
+    static MainWindow * Get() { return instance; }
+    void        AcknowledgeTransferToNode(uint nodeId);
 
 signals:
     void        newState(uint const & devId, uint const & status);
@@ -110,6 +112,9 @@ private:
 
     // Defines whether the daemon has ended up initialization
     bool readyToServe;
+
+    // Ptr of instance of this object
+    static MainWindow * instance;
 };
 
 #endif // MAINWINDOW_H
