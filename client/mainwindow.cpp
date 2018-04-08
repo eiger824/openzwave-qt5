@@ -1,4 +1,5 @@
 #include <QDBusConnection>
+#include <QMovie>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -52,6 +53,13 @@ void MainWindow::on_pushButton_clicked()
                QString::number(nodeId) + ") to set status(" +
                QString::number(statusCode) + "). Awaiting server response.......", false);
     iface->statusSet(nodeId, statusCode);
+    // Set animation for icon label
+    QMovie * movie = new QMovie(":/images/imgs/progress.gif");
+    movie->setScaledSize(ui->icon_label->size());
+    ui->icon_label->setMovie(movie);
+    movie->start();
+    // And disable the buttons
+    ui->pushButton->setEnabled(false);
 }
 
 void MainWindow::appendText(QPlainTextEdit * qpt, QString const & txt, bool nl)
@@ -93,12 +101,28 @@ void MainWindow::statusSetAckSlot(uint devId, bool result)
     if (!result)
     {
         appendText(ui->plainTextEdit, "[fail]", true);
+        // Stop movie and set a red cross
+        QMovie * mv = ui->icon_label->movie();
+        mv->stop();
+        delete mv;
+        QPixmap pm{":/images/imgs/warning.png"};
+        ui->icon_label->setPixmap(pm);
+        // Re-enable button
+        ui->pushButton->setEnabled(true);
     }
 }
 
 void MainWindow::statusChangedCfmSlot(uint devId)
 {
     appendText(ui->plainTextEdit, "[ok]", true);
+    // Stop movie and set a green check!
+    QMovie * mv = ui->icon_label->movie();
+    mv->stop();
+    delete mv;
+    QPixmap pm{":/images/imgs/check.png"};
+    ui->icon_label->setPixmap(pm);
+    // Re-enable button
+    ui->pushButton->setEnabled(true);
 }
 
 void MainWindow::publishNodeDetailsSlot(uint nodeID, uint minVal, uint maxVal)
