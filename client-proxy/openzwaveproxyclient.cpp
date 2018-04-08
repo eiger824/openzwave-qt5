@@ -58,10 +58,10 @@ void OpenZWaveProxyClient::serverReadyAckSlot(bool res)
 
 void OpenZWaveProxyClient::statusSetAckSlot(uint nodeId, bool res)
 {
-    cerr << "Received result: " << res << endl;
     // Simply exit application with exit code in `!res`
     if (!res)
     {
+        cerr << "Error: the operation failed. Exiting ..." << endl;
         qApp->exit(1); // Exit with error if the operation was unsuccessful
     }
 }

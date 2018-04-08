@@ -80,7 +80,7 @@ public Q_SLOTS:
     void        publishNodeDetailsAck(uint nodeId);
 
 Q_SIGNALS:
-    void        statusSetAck(uint requestNode, uint requestOk);
+    void        statusSetAck(uint requestNode, bool requestOk);
     // Remote node has changed its status and confirms
     void        statusChangedCfm(uint nodeId);
     // Client asks if server ready
