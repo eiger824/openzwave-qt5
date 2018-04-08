@@ -1,50 +1,43 @@
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<node>
+<node name="/se/mysland/openzwave">
   <interface name="se.mysland.openzwave">
 
     <!-- Status get / set -->
-    <signal name="statusSet">
-      <arg name="deviceId"   type="u" direction="out"/>
-      <arg name="statusCode" type="u" direction="out"/>
-    </signal>
+    <method name="statusSet">
+      <arg name="deviceId"          type="u"    direction="in"/>
+      <arg name="statusCode"        type="u"    direction="in"/>
+    </method>
     <signal name="statusSetAck">
-      <arg name="requestNode"   type="u" direction="out"/>
-      <arg name="requestOk"     type="b" direction="out"/>
+      <arg name="requestNode"       type="u"    direction="out"/>
+      <arg name="requestOk"         type="b"    direction="out"/>
     </signal>
-
-    <!-- Remote node has changed its status and confirms -->
     <signal name="statusChangedCfm">
-        <arg name="nodeId"  type="u"  direction="out"/>
+        <arg name="nodeId"          type="u"    direction="out"/>
     </signal>
 
-    <!-- Client asks if server ready -->
-    <signal name="serverReady">
-    </signal>
+    <method name="serverReady">
+    </method>
     <signal name="serverReadyAck">
-        <arg name="ready"    type="b" direction="out"/>
+        <arg name="ready"           type="b"    direction="out"/>
     </signal>
-    <signal name="requestNodeTransfer">
-    </signal>
+    <method name="requestNodeTransfer">
+    </method>
 
-    <!-- Daemon sends -->
     <signal name="publishNrNodes">
-      <arg name="nodeNr"     type="u" direction="out"/>
+      <arg name="nodeNr"            type="u"    direction="out"/>
     </signal>
-    <!-- Client responds -->
-    <signal name="publishNrNodesAck">
-    </signal>
+    <method name="publishNrNodesAck">
+    </method>
 
-    <!-- Daemon sends -->
     <signal name="publishNodeDetails">
-      <arg name="nodeId"        type="u" direction="out"/>
-      <arg name="nodeIdMinVal"  type="u" direction="out"/>
-      <arg name="nodeIdMaxVal"  type="u" direction="out"/>
+      <arg name="nodeId"            type="u"    direction="out"/>
+      <arg name="nodeIdMinVal"      type="u"    direction="out"/>
+      <arg name="nodeIdMaxVal"      type="u"    direction="out"/>
     </signal>
-    <!-- Client responds -->
-    <signal name="publishNodeDetailsAck">
-      <arg name="nodeId"        type="u" direction="out"/>
-    </signal>
+    <method name="publishNodeDetailsAck">
+      <arg name="nodeId"            type="u"    direction="in"/>
+    </method>
 
   </interface>
 </node>

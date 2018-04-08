@@ -4,7 +4,6 @@
 #include <QDBusMessage>
 
 // D-Bus includes
-#include "openzwave_adaptor.h"
 #include "openzwave_interface.h"
 
 // Local includes
@@ -20,31 +19,29 @@ OpenZWaveProxyClient::OpenZWaveProxyClient(uint _nodeId, uint _value,
     value{_value},
     QObject(parent)
 {
-    QDBusConnection conn = QDBusConnection::sessionBus();
-
-    new OpenzwaveAdaptor(this);
-    conn.registerObject("/", this);
-    se::mysland::openzwave * iface;
-    iface = new se::mysland::openzwave(QString{},
-                                       QString{},
-                                       conn,
+    iface = new se::mysland::openzwave(QString{"se.mysland.openzwave"},
+                                       QString{"/se/mysland/openzwave"},
+                                       QDBusConnection::sessionBus(),
                                        this);
-    connect(iface, SIGNAL(serverReadyAck(bool)),
-            this, SLOT(serverReadyAckSlot(bool)));
+
     connect(iface, SIGNAL(statusSetAck(uint,bool)),
             this, SLOT(statusSetAckSlot(uint,bool)));
+    connect(iface, SIGNAL(serverReadyAck(bool)),
+            this, SLOT(serverReadyAckSlot(bool)));
     connect(iface, SIGNAL(statusChangedCfm(uint)),
             this, SLOT(statusChangedCfmSlot(uint)));
 
-    // Ask the server if it is ready to accept commands
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "serverReady");
-    if (!conn.send(msg))
+    if (!iface->isValid())
     {
-        QDBusError err = conn.lastError();
-        cerr << "Error sending message: "
-             << err.message().toStdString() << endl;
+        cerr << "Error: daemon doesn't seem to be running."
+             << endl;
+        success = false;
+    }
+    else
+    {
+        success = true;
+        // Ask the server if it is ready to accept commands
+        iface->serverReady();
     }
 }
 
@@ -56,12 +53,7 @@ void OpenZWaveProxyClient::serverReadyAckSlot(bool res)
         qApp->exit(1);
         return;
     }
-    QDBusConnection conn = QDBusConnection::sessionBus();
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "statusSet");
-    msg << nodeId << value;
-    conn.send(msg);
+    iface->statusSet(nodeId, value);
 }
 
 void OpenZWaveProxyClient::statusSetAckSlot(uint nodeId, bool res)

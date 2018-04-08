@@ -26,7 +26,7 @@ SOURCES += main.cpp \
 HEADERS += \
     openzwaveproxyclient.h
 
-DBUS_ADAPTORS   += ../common/dbus/se.mysland.openzwave.xml
+#DBUS_ADAPTORS   += ../common/dbus/se.mysland.openzwave.xml
 DBUS_INTERFACES += ../common/dbus/se.mysland.openzwave.xml
 
 DISTFILES += \

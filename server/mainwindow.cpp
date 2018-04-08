@@ -14,7 +14,6 @@
 
 // D-Bus includes
 #include "openzwave_adaptor.h"
-#include "openzwave_interface.h"
 
 // OpenZWave includes
 #include "Options.h"
@@ -184,36 +183,22 @@ MainWindow::MainWindow(bool _graphic,
 
     setWindowTitle("OpenZWave daemon");
 
+    // Register adaptor
+    new OpenzwaveAdaptor(this);
     // Add D-BUs interface and connect to it
     QDBusConnection conn = QDBusConnection::sessionBus();
-
-    new OpenzwaveAdaptor(this);
-    conn.registerObject("/", this);
-    conn.connect(QString{},                 /* Path */
-                 QString{},                 /* Service */
-                 "se.mysland.openzwave",    /* Interface name */
-                 "statusSet",               /* Signal name */
-                 this,                      /* This object, connect here */
-                 SLOT(statusSetSlot(uint, uint))); /* Run slot when "statusSet" is received*/
-    conn.connect(QString{},
-                 QString{},
-                 "se.mysland.openzwave",
-                 "publishNrNodesAck",
-                 this,
-                 SLOT(publishNrSlotsRecvAck())); /* Run slot when client acknowledges receival */
-
-    conn.connect(QString{},
-                 QString{},
-                 "se.mysland.openzwave",
-                 "serverReady",
-                 this,
-                 SLOT(serverReadySlot()));
-    conn.connect(QString{},
-                 QString{},
-                 "se.mysland.openzwave",
-                 "requestNodeTransfer",
-                 this,
-                 SLOT(broadcastNodes()));
+    if (!conn.registerObject("/se/mysland/openzwave", this))
+    {
+        cerr << "Error registering object path: "
+             << conn.lastError().message().toStdString()
+             << endl;
+    }
+    if (!conn.registerService("se.mysland.openzwave"))
+    {
+        cerr << "Error registering service: "
+             << conn.lastError().message().toStdString()
+             << endl;
+    }
 
     // We want to free and stop the engine when exiting the application
     connect(qApp, SIGNAL(aboutToQuit()), this, SLOT(beforeExit()));
@@ -245,17 +230,96 @@ MainWindow::~MainWindow()
 
 void MainWindow::AcknowledgeTransferToNode(uint nodeId)
 {
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "statusChangedCfm");
-    QDBusConnection conn = QDBusConnection::sessionBus();
-    msg << nodeId;
+    emit statusChangedCfm(nodeId);
+}
 
-    if (!conn.send(msg))
+void MainWindow::statusSet(uint devId, uint statusCode)
+{
+    appendText("Received request: STATUS(" +
+               QString::number(devId) + ") for node ID " +
+               QString::number(statusCode));
+    if (readyToServe)
     {
-        cerr << "Error, could not send signal: "
-             << conn.lastError().message().toStdString() << endl;
+        bool result { false };
+        // Check if devId is a valid one
+        if (!validNodeId(devId))
+        {
+            appendText("Request for non-existent NodeID \"" +
+                       QString::number(devId) + "\", skipping request.");
+            result = false;
+            emit statusSetAck(devId, result);
+            return;
+        }
+        if (!validValue(devId, statusCode))
+        {
+            appendText("Invalid status '" +
+                       QString::number(statusCode) + "' for NodeID \"" +
+                       QString::number(devId) + "\", skipping request.");
+            result = false;
+            emit statusSetAck(devId, result);
+            return;
+        }
+        switch (devId)
+        {
+        case SWITCH_BINARY_ID:
+            result = ToggleSwitchBinary(SWITCH_BINARY_ID,
+                                        static_cast<bool>(statusCode));
+            break;
+        case SWITCH_MULTILEVEL_ID:
+            //TODO: implement
+            result = ToggleSwitchMultilevel(SWITCH_MULTILEVEL_ID,
+                                            static_cast<uint8>(statusCode));
+            break;
+        }
+
+        // Write back response code
+        emit statusSetAck(devId, result);
     }
+    else
+    {
+        appendText("The OpenZWave engine is still initializing ...");
+    }
+}
+
+void MainWindow::serverReady()
+{
+    appendText("Someone just queried my state. Replying...");
+    emit serverReadyAck(readyToServe);
+}
+
+void MainWindow::requestNodeTransfer()
+{
+    if (timer->interval() < BROADCAST_TIMEOUT)
+    {
+        timer->start(BROADCAST_TIMEOUT);
+    }
+    emit publishNrNodes(g_nodes.size());
+}
+
+void MainWindow::publishNrNodesAck()
+{
+    // Once done this, we want to publish the nodes to the client
+    for (auto const & node : g_nodes)
+    {
+        if (node->m_nodeId == SWITCH_BINARY_ID)
+        {
+            emit publishNodeDetails(node->m_nodeId, 0, 1);
+        }
+        else
+        {
+            if (node->m_nodeId != 1)
+            {
+                emit publishNodeDetails(node->m_nodeId, 0, 99);
+            }
+        }
+    }
+}
+
+void MainWindow::publishNodeDetailsAck(uint nodeId)
+{
+    appendText("Node ID " +
+               QString::number(nodeId) +
+               " has been acknowledged.");
 }
 
 void MainWindow::InitOpenZWave()
@@ -295,27 +359,7 @@ void MainWindow::InitOpenZWaveDone(bool res)
 // This will be called every BROADCAST_TIMEOUT secs to notify changes to client
 void MainWindow::broadcastNodes()
 {
-    if (timer->interval() < BROADCAST_TIMEOUT)
-    {
-        timer->start(BROADCAST_TIMEOUT);
-    }
-    appendText("Notifying clients");
-    // First, publish the number of nodes discovered
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "publishNrNodes");
-    msg << static_cast<uint>(g_nodes.size());
-    QDBusConnection::sessionBus().send(msg);
-}
-
-void MainWindow::serverReadySlot()
-{
-    appendText("Someone just queried my state. Replying...");
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "serverReadyAck");
-    msg << readyToServe;
-    QDBusConnection::sessionBus().send(msg);
+    requestNodeTransfer();
 }
 
 void MainWindow::StopOpenZWave()
@@ -358,87 +402,10 @@ bool MainWindow::validValue(uint devId, uint val)
         return val < 2; /* 0 or 1 */
     case SWITCH_MULTILEVEL_ID:
         return val < 100; /* 0 to 99, see page 518 of Specification */
+    default:
+        break;
     }
-}
-
-void MainWindow::statusSetSlot(uint devId, uint statusCode)
-{
-    appendText("Received request: STATUS(" +
-               QString::number(devId) + ") for node ID " +
-               QString::number(statusCode));
-    if (readyToServe)
-    {
-        QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                      "se.mysland.openzwave",
-                                                      "statusSetAck");
-        QDBusConnection conn = QDBusConnection::sessionBus();
-
-        // Check if devId is a valid one
-        if (!validNodeId(devId))
-        {
-            appendText("Request for non-existent NodeID \"" +
-                       QString::number(devId) + "\", skipping request.");
-            msg << devId << static_cast<uint>(false);
-            conn.send(msg);
-            return;
-        }
-        if (!validValue(devId, statusCode))
-        {
-            appendText("Invalid status '" +
-                       QString::number(statusCode) + "' for NodeID \"" +
-                       QString::number(devId) + "\", skipping request.");
-            msg << devId << static_cast<uint>(false);
-            conn.send(msg);
-            return;
-        }
-        bool result;
-        switch (devId)
-        {
-        case SWITCH_BINARY_ID:
-            result = ToggleSwitchBinary(SWITCH_BINARY_ID,
-                                        static_cast<bool>(statusCode));
-            break;
-        case SWITCH_MULTILEVEL_ID:
-            //TODO: implement
-            result = ToggleSwitchMultilevel(SWITCH_MULTILEVEL_ID,
-                                            static_cast<uint8>(statusCode));
-            break;
-        }
-
-        // Write back response code
-        msg << devId << result;
-        conn.send(msg);
-    }
-    else
-    {
-        appendText("The OpenZWave engine is still initializing ...");
-    }
-}
-
-void MainWindow::publishNrSlotsRecvAck()
-{
-    // Once done this, we want to publish the nodes to the client
-    QDBusMessage msg;
-    QDBusConnection conn = QDBusConnection::sessionBus();
-    for (auto const & node : g_nodes)
-    {
-        msg = QDBusMessage::createSignal("/", "se.mysland.openzwave", "publishNodeDetails");
-        msg << static_cast<uint>(node->m_nodeId);
-        if (node->m_nodeId == 21)
-        {
-            msg << static_cast<uint>(0);
-            msg << static_cast<uint>(1);
-        }
-        else
-        {
-            if (node->m_nodeId != 1)
-            {
-                msg << static_cast<uint>(0);
-                msg << static_cast<uint>(99);
-            }
-        }
-        conn.send(msg);
-    }
+    return false;
 }
 
 void MainWindow::appendText(QString const & txt)

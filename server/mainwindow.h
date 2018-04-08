@@ -58,6 +58,7 @@ private:
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "se.mysland.openzwave")
 
 public:
     explicit MainWindow(bool _graphic,
@@ -68,6 +69,24 @@ public:
     ~MainWindow();
     static MainWindow * Get() { return instance; }
     void        AcknowledgeTransferToNode(uint nodeId);
+
+public Q_SLOTS:
+    void        statusSet(uint deviceId, uint statusCode);
+    void        serverReady();
+    void        requestNodeTransfer();
+    void        publishNrNodesAck();
+    void        publishNodeDetailsAck(uint nodeId);
+
+Q_SIGNALS:
+    void        statusSetAck(uint requestNode, uint requestOk);
+    // Remote node has changed its status and confirms
+    void        statusChangedCfm(uint nodeId);
+    // Client asks if server ready
+    void        serverReadyAck(bool ready);
+    // Daemon informs about the number of nodes
+    void        publishNrNodes(uint nodeNr);
+    // Daemon sends details about the discovered nodes
+    void        publishNodeDetails(uint nodeId, uint nodeIdMinVal, uint nodeIdMaxVal);
 
 signals:
     void        newState(uint const & devId, uint const & status);
@@ -84,14 +103,11 @@ private:
     bool        validValue(uint devId, uint val);
 
 private slots:
-    void        statusSetSlot(uint devId, uint statusCode);
-    void        publishNrSlotsRecvAck();
     void        on_pushButton_clicked();
     void        InitOpenZWave();
     void        beforeExit();
     void        InitOpenZWaveDone(bool res);
     void        broadcastNodes();
-    void        serverReadySlot();
 
 private:
     OpenZWaveBackgroundThread * wt;

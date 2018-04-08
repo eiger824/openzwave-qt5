@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include "openzwave_interface.h"
 #include "defs.h"
 
 class OpenZWaveProxyClient : public QObject
@@ -11,15 +12,17 @@ class OpenZWaveProxyClient : public QObject
 public:
     explicit OpenZWaveProxyClient(uint _nodeId, uint _value,
                                   QObject *parent = nullptr);
-
+    inline bool isInterfaceValid() const { return success; }
 public slots:
-    void serverReadyAckSlot(bool res);
     void statusSetAckSlot(uint nodeId, bool res);
     void statusChangedCfmSlot(uint nodeId);
+    void serverReadyAckSlot(bool res);
 
 private:
     uint nodeId;
     uint value;
+    se::mysland::openzwave * iface;
+    bool success {false};
 };
 
 #endif // OPENZWAVEPROXYCLIENT_H

@@ -6,6 +6,9 @@
 #include <QList>
 #include <QMutex>
 
+// D-Bus includes
+#include "openzwave_interface.h"
+
 #include "defs.h"
 
 namespace Ui {
@@ -27,7 +30,7 @@ private:
 private slots:
     void on_pushButton_clicked();
     void statusSetAckSlot(uint devId, bool result);
-    void statusChangedCfgSlot(uint devId);
+    void statusChangedCfmSlot(uint devId);
     void publishNodeDetailsSlot(uint nodeID ,uint minVal ,uint maxVal);
     void publishNrNodesSlot(uint _nrNodes);
     void serverReadyAckSlot(bool ready);
@@ -43,6 +46,7 @@ private:
     QList<NodeDetails*> list;
     uint nrNodes;
     QMutex mutex;
+    se::mysland::openzwave * iface;
 };
 
 #endif // MAINWINDOW_H

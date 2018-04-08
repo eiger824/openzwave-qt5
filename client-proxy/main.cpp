@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
             nodeId = static_cast<uint>( atoi(optarg) );
             break;
         case 'v':
-            value = static_cast<uint> (atoi (optarg ));
+            value = static_cast<uint> ( atoi (optarg) );
             break;
         default:
             cerr << "Unrecognized option '" << c << "'" << endl;
@@ -49,7 +49,10 @@ int main(int argc, char *argv[])
         return 1;
     }
     OpenZWaveProxyClient proxy {static_cast<uint>(nodeId), static_cast<uint>(value)};
-
+    if (!proxy.isInterfaceValid())
+    {
+        return 1;
+    }
     QCoreApplication a(argc, argv);
     return a.exec();
 }

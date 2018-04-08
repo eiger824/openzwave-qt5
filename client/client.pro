@@ -35,7 +35,6 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
-DBUS_ADAPTORS   += ../common/dbus/se.mysland.openzwave.xml
 DBUS_INTERFACES += ../common/dbus/se.mysland.openzwave.xml
 
 DISTFILES += \

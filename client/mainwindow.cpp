@@ -1,9 +1,5 @@
 #include <QDBusConnection>
 
-// D-Bus includes
-#include "openzwave_adaptor.h"
-#include "openzwave_interface.h"
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -22,17 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Set the fancy OZW logo
     QPixmap pm{"ozwlogo.png"};
-
     ui->label_3->setPixmap(pm);
 
-    QDBusConnection conn = QDBusConnection::sessionBus();
-
-    new OpenzwaveAdaptor(this);
-    conn.registerObject("/", this);
-    se::mysland::openzwave * iface;
-    iface = new se::mysland::openzwave(QString{},
-                                       QString{},
-                                       conn,
+    iface = new se::mysland::openzwave(QString{"se.mysland.openzwave"},
+                                       QString{"/se/mysland/openzwave"},
+                                       QDBusConnection::sessionBus(),
                                        this);
     connect(iface, SIGNAL(statusSetAck(uint,bool)),
             this, SLOT(statusSetAckSlot(uint,bool)));
@@ -43,13 +33,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(iface, SIGNAL(serverReadyAck(bool)),
             this, SLOT(serverReadyAckSlot(bool)));
     connect(iface, SIGNAL(statusChangedCfm(uint)),
-            this, SLOT(statusChangedCfgSlot(uint)));
+            this, SLOT(statusChangedCfmSlot(uint)));
 
     // Ask the server if it is ready to accept commands
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "serverReady");
-    conn.send(msg);
+    iface->serverReady();
 }
 
 MainWindow::~MainWindow()
@@ -64,9 +51,7 @@ void MainWindow::on_pushButton_clicked()
     appendText(ui->plainTextEdit, "Request for node(" +
                QString::number(nodeId) + ") to set status(" +
                QString::number(statusCode) + "). Awaiting server response.......", false);
-    QDBusMessage msg = QDBusMessage::createSignal("/", "se.mysland.openzwave", "statusSet");
-    msg << nodeId << statusCode;
-    QDBusConnection::sessionBus().send(msg);
+    iface->statusSet(nodeId, statusCode);
 }
 
 void MainWindow::appendText(QPlainTextEdit * qpt, QString const & txt, bool nl)
@@ -111,7 +96,7 @@ void MainWindow::statusSetAckSlot(uint devId, bool result)
     }
 }
 
-void MainWindow::statusChangedCfgSlot(uint devId)
+void MainWindow::statusChangedCfmSlot(uint devId)
 {
     appendText(ui->plainTextEdit, "[ok]", true);
 }
@@ -130,10 +115,7 @@ void MainWindow::publishNodeDetailsSlot(uint nodeID, uint minVal, uint maxVal)
         // Append it to the list
         list.append(new NodeDetails(nodeID, minVal, maxVal));
         // Send Ack for this node
-        QDBusConnection conn = QDBusConnection::sessionBus();
-        QDBusMessage msg = QDBusMessage::createSignal("/", "se.mysland.openzwave", "publishNodeDetailsAck");
-        msg << nodeID;
-        conn.send(msg);
+        iface->publishNodeDetailsAck(nodeID);
         // Add it to the combo boxes
         ui->comboBox->addItem(QString::number(nodeID));
         for (uint i=minVal; i <= maxVal; ++i)
@@ -150,11 +132,7 @@ void MainWindow::publishNrNodesSlot(uint _nrNodes)
 {
     nrNodes = _nrNodes;
     // Send ack through bus
-    QDBusConnection conn = QDBusConnection::sessionBus();
-    QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                  "se.mysland.openzwave",
-                                                  "publishNrNodesAck");
-    conn.send(msg);
+    iface->publishNrNodesAck();
 }
 
 void MainWindow::serverReadyAckSlot(bool ready)
@@ -162,10 +140,7 @@ void MainWindow::serverReadyAckSlot(bool ready)
     if (ready)
     {
         // Then request that the daemon sends us the nodes
-        QDBusMessage msg = QDBusMessage::createSignal("/",
-                                                      "se.mysland.openzwave",
-                                                      "requestNodeTransfer");
-        QDBusConnection::sessionBus().send(msg);
+        iface->requestNodeTransfer();
     }
     else
     {
