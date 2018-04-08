@@ -186,7 +186,7 @@ MainWindow::MainWindow(bool _graphic,
     // Register adaptor
     new OpenzwaveAdaptor(this);
     // Add D-BUs interface and connect to it
-    QDBusConnection conn = QDBusConnection::sessionBus();
+    QDBusConnection conn = QDBusConnection::systemBus();
     if (!conn.registerObject("/se/mysland/openzwave", this))
     {
         cerr << "Error registering object path: "
@@ -236,8 +236,8 @@ void MainWindow::AcknowledgeTransferToNode(uint nodeId)
 void MainWindow::statusSet(uint devId, uint statusCode)
 {
     appendText("Received request: STATUS(" +
-               QString::number(devId) + ") for node ID " +
-               QString::number(statusCode));
+               QString::number(statusCode) + ") for node ID " +
+               QString::number(devId));
     if (readyToServe)
     {
         bool result { false };

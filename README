@@ -1,0 +1,11 @@
+Please install the D-Bus configuration file under
+`common/dbus/mysland-openzwave.conf`
+in /etc/dbus-1/system.d.
+
+This configuration file specifies that
+the only owner of the service must be the `root` user, but that
+any user can have access to `root`'s remote methods on the interface.
+
+Basically we want to control the daemon via web (probably as the user
+"http" - or "www-data" in some distros), so that is why we want to
+allow these users to run stuff that the daemon implements.

@@ -21,7 +21,7 @@ OpenZWaveProxyClient::OpenZWaveProxyClient(uint _nodeId, uint _value,
 {
     iface = new se::mysland::openzwave(QString{"se.mysland.openzwave"},
                                        QString{"/se/mysland/openzwave"},
-                                       QDBusConnection::sessionBus(),
+                                       QDBusConnection::systemBus(),
                                        this);
 
     connect(iface, SIGNAL(statusSetAck(uint,bool)),
@@ -58,6 +58,7 @@ void OpenZWaveProxyClient::serverReadyAckSlot(bool res)
 
 void OpenZWaveProxyClient::statusSetAckSlot(uint nodeId, bool res)
 {
+    cerr << "Received result: " << res << endl;
     // Simply exit application with exit code in `!res`
     if (!res)
     {
