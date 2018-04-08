@@ -112,7 +112,7 @@ void OpenZWaveBackgroundThread::run()
     emit resultReady(result);
 }
 
-bool MainWindow::ToggleSwitchBinary(const int node_Id, bool status)
+bool MainWindow::toggleSwitchBinary(const int node_Id, bool status)
 {
     bool result {true};
 
@@ -137,7 +137,7 @@ bool MainWindow::ToggleSwitchBinary(const int node_Id, bool status)
     return result;
 }
 
-bool MainWindow::ToggleSwitchMultilevel(const int node_Id, const uint8 level)
+bool MainWindow::toggleSwitchMultilevel(const int node_Id, const uint8 level)
 {
     bool result {true};
     // Lock critical section
@@ -173,6 +173,7 @@ MainWindow::MainWindow(bool _graphic,
     ttyPort{_ttyPort},
     configPath{_configPath},
     readyToServe{false},
+    dbusSuccess{true},
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -192,12 +193,14 @@ MainWindow::MainWindow(bool _graphic,
         cerr << "Error registering object path: "
              << conn.lastError().message().toStdString()
              << endl;
+        dbusSuccess = false;
     }
     if (!conn.registerService("se.mysland.openzwave"))
     {
         cerr << "Error registering service: "
              << conn.lastError().message().toStdString()
              << endl;
+        dbusSuccess = false;
     }
 
     // We want to free and stop the engine when exiting the application
@@ -209,8 +212,7 @@ MainWindow::MainWindow(bool _graphic,
      * the MainWindow constructor by signaling that we are ready to go.
     */
     connect(this, SIGNAL(startOZWInitialization()),
-            this, SLOT(InitOpenZWave()));
-    emit startOZWInitialization();
+            this, SLOT(initOpenZWave()));
 
     // Start animation
     QMovie * movie = new QMovie(":/images/imgs/progress.gif");
@@ -228,9 +230,14 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::AcknowledgeTransferToNode(uint nodeId)
+void MainWindow::acknowledgeTransferToNode(uint nodeId)
 {
     emit statusChangedCfm(nodeId);
+}
+
+void MainWindow::startOZWEngine()
+{
+    emit startOZWInitialization();
 }
 
 void MainWindow::statusSet(uint devId, uint statusCode)
@@ -242,7 +249,7 @@ void MainWindow::statusSet(uint devId, uint statusCode)
     {
         bool result { false };
         // Check if devId is a valid one
-        if (!validNodeId(devId))
+        if (!isValidNodeId(devId))
         {
             appendText("Request for non-existent NodeID \"" +
                        QString::number(devId) + "\", skipping request.");
@@ -250,7 +257,7 @@ void MainWindow::statusSet(uint devId, uint statusCode)
             emit statusSetAck(devId, result);
             return;
         }
-        if (!validValue(devId, statusCode))
+        if (!isValidValue(devId, statusCode))
         {
             appendText("Invalid status '" +
                        QString::number(statusCode) + "' for NodeID \"" +
@@ -262,12 +269,11 @@ void MainWindow::statusSet(uint devId, uint statusCode)
         switch (devId)
         {
         case SWITCH_BINARY_ID:
-            result = ToggleSwitchBinary(SWITCH_BINARY_ID,
+            result = toggleSwitchBinary(SWITCH_BINARY_ID,
                                         static_cast<bool>(statusCode));
             break;
         case SWITCH_MULTILEVEL_ID:
-            //TODO: implement
-            result = ToggleSwitchMultilevel(SWITCH_MULTILEVEL_ID,
+            result = toggleSwitchMultilevel(SWITCH_MULTILEVEL_ID,
                                             static_cast<uint8>(statusCode));
             break;
         }
@@ -322,7 +328,7 @@ void MainWindow::publishNodeDetailsAck(uint nodeId)
                " has been acknowledged.");
 }
 
-void MainWindow::InitOpenZWave()
+void MainWindow::initOpenZWave()
 {
     appendText("Initializing OpenZWave engine ...");
 
@@ -331,7 +337,7 @@ void MainWindow::InitOpenZWave()
     wt->setData(ttyPort, configPath, !silent);
 
     connect(wt, &OpenZWaveBackgroundThread::resultReady,
-            this, &MainWindow::InitOpenZWaveDone);
+            this, &MainWindow::initOpenZWaveDone);
     connect(wt, &OpenZWaveBackgroundThread::finished,
             wt, &QObject::deleteLater);
 
@@ -340,7 +346,7 @@ void MainWindow::InitOpenZWave()
     wt->start();
 }
 
-void MainWindow::InitOpenZWaveDone(bool res)
+void MainWindow::initOpenZWaveDone(bool res)
 {
     ts.getElapsedTime(t.elapsed() * 1e3);
     appendText("Initialization done! Elapsed time: " + ts.toString());
@@ -362,7 +368,7 @@ void MainWindow::broadcastNodes()
     requestNodeTransfer();
 }
 
-void MainWindow::StopOpenZWave()
+void MainWindow::stopOpenZWave()
 {
     // Check only if wt is active
     if (wt->isRunning())
@@ -379,11 +385,11 @@ void MainWindow::StopOpenZWave()
 void MainWindow::beforeExit()
 {
     appendText("Exiting...");
-    StopOpenZWave();
+    stopOpenZWave();
     QCoreApplication::quit();
 }
 
-bool MainWindow::validNodeId(uint devId)
+bool MainWindow::isValidNodeId(uint devId)
 {
     for (auto const & node : g_nodes)
     {
@@ -393,7 +399,7 @@ bool MainWindow::validNodeId(uint devId)
     return false;
 }
 
-bool MainWindow::validValue(uint devId, uint val)
+bool MainWindow::isValidValue(uint devId, uint val)
 {
     // TODO: check this via OpenZWave
     switch (devId)
@@ -591,7 +597,7 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
             cout << "Message complete for node " << static_cast<int>(_notification->GetNodeId())
                  << "! Sending ACK over the bus..." << endl;
             MainWindow * w = MainWindow::Get();
-            w->AcknowledgeTransferToNode(_notification->GetNodeId());
+            w->acknowledgeTransferToNode(_notification->GetNodeId());
             break;
         }
     }

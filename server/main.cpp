@@ -84,10 +84,21 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
     MainWindow w(graphic, silent, port, config);
+    if (w.isDBusWorking())
+    {
+        // This function will trigger a signal that will initiate the OZW
+        // background working thread
+        w.startOZWEngine();
+        /* Only run graphically if flag was set */
+        if (graphic)
+            w.show();
 
-    /* Only run graphically if flag was set */
-    if (graphic)
-        w.show();
-
-    return a.exec();
+        return a.exec();
+    }
+    else
+    {
+        cerr << "Error: there was a problem creating the D-Bus interface"
+             << endl;
+        return 1;
+    }
 }

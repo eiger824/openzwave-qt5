@@ -68,7 +68,9 @@ public:
                         QWidget *parent = 0);
     ~MainWindow();
     static MainWindow * Get() { return instance; }
-    void        AcknowledgeTransferToNode(uint nodeId);
+    void        acknowledgeTransferToNode(uint nodeId);
+    inline bool isDBusWorking() const { return dbusSuccess; }
+    void        startOZWEngine();
 
 public Q_SLOTS:
     void        statusSet(uint deviceId, uint statusCode);
@@ -95,18 +97,18 @@ signals:
 
 private:
     void        appendText(QString const & txt);
-    bool        ToggleSwitchBinary(const int node_Id, bool status);
-    bool        ToggleSwitchMultilevel(const int node_Id,
+    bool        toggleSwitchBinary(const int node_Id, bool status);
+    bool        toggleSwitchMultilevel(const int node_Id,
                                        const uint8 level);
-    void        StopOpenZWave();
-    bool        validNodeId(uint devId);
-    bool        validValue(uint devId, uint val);
+    void        stopOpenZWave();
+    bool        isValidNodeId(uint devId);
+    bool        isValidValue(uint devId, uint val);
 
 private slots:
     void        on_pushButton_clicked();
-    void        InitOpenZWave();
+    void        initOpenZWave();
     void        beforeExit();
-    void        InitOpenZWaveDone(bool res);
+    void        initOpenZWaveDone(bool res);
     void        broadcastNodes();
 
 private:
@@ -131,6 +133,9 @@ private:
 
     // Ptr of instance of this object
     static MainWindow * instance;
+
+    // Defines whether everything 'looks good' from the d-bus side
+    bool dbusSuccess;
 };
 
 #endif // MAINWINDOW_H
