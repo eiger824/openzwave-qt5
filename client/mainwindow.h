@@ -22,6 +22,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    inline bool isInterfaceValid() const { return success; }
 
 private:
     void appendText(QPlainTextEdit * qpt, QString const & txt, bool nl);
@@ -47,6 +48,7 @@ private:
     uint nrNodes;
     QMutex mutex;
     se::mysland::openzwave * iface;
+    bool success {false};
 };
 
 #endif // MAINWINDOW_H

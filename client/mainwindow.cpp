@@ -1,8 +1,13 @@
 #include <QDBusConnection>
 #include <QMovie>
 
+#include <iostream>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+using std::cerr;
+using std::endl;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -23,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     iface = new se::mysland::openzwave(QString{"se.mysland.openzwave"},
                                        QString{"/se/mysland/openzwave"},
-                                       QDBusConnection::sessionBus(),
+                                       QDBusConnection::systemBus(),
                                        this);
     connect(iface, SIGNAL(statusSetAck(uint,bool)),
             this, SLOT(statusSetAckSlot(uint,bool)));
@@ -36,8 +41,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(iface, SIGNAL(statusChangedCfm(uint)),
             this, SLOT(statusChangedCfmSlot(uint)));
 
-    // Ask the server if it is ready to accept commands
-    iface->serverReady();
+    if (!iface->isValid())
+    {
+        cerr << "Error: daemon doesn't seem to be running."
+             << endl;
+        success = false;
+    }
+    else
+    {
+        success = true;
+        // Ask the server if it is ready to accept commands
+        iface->serverReady();
+    }
 }
 
 MainWindow::~MainWindow()
