@@ -13,8 +13,16 @@ else
     git clone --depth=1 https://github.com/eiger824/open-zwave.git $HOME/open-zwave
 fi
 
-# Export env variables
-export OZW_ROOT=${HOME}/open-zwave
+if [[ -z $BITBAKE_ENV ]]; then
+    # Export env variables
+    export OZW_ROOT=${HOME}/open-zwave
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OZW_ROOT
+else
+    # This is a BITBAKE build, then adapt these flags
+    # TODO: Fix this, don't hardcode the path
+    export OZW_ROOT=${S}/../../openzwave/1.4-r0/git
+fi
+
 export OZW_CPP=${OZW_ROOT}/cpp
 export OZW_SRC=${OZW_CPP}/src
 export OZW_CMD_CLASSES=${OZW_SRC}/command_classes
@@ -23,6 +31,5 @@ export OZW_PLATFORM=${OZW_SRC}/platform
 export OZW_VALUE_CLASSES=${OZW_SRC}/value_classes
 export OZW_SYSCONFDIR=/etc/openzwave
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OZW_ROOT
 
 echo "Done."
