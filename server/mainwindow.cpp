@@ -163,6 +163,62 @@ bool MainWindow::toggleSwitchMultilevel(const int node_Id, const uint8 level)
     return result;
 }
 
+bool MainWindow::getSwitchBinaryStatus(const uint nodeId, uint & status)
+{
+    bool result {true};
+    bool currentStatus {false};
+
+    // Lock critical section
+    pthread_mutex_lock (&g_criticalSection);
+
+    for (auto const & node : g_nodes)
+    {
+        if (node->m_nodeId == nodeId)
+        {
+            for (auto const & value : node->m_values)
+            {
+                if (value.GetCommandClassId() == SwitchBinary::StaticGetCommandClassId())
+                {
+                    result = Manager::Get()->GetValueAsBool(value, &currentStatus);
+                }
+            }
+        }
+    }
+    // Unlock critical section
+    pthread_mutex_unlock (&g_criticalSection);
+    // Cast back to uint and update `status`
+    status = static_cast<uint>(currentStatus);
+    return result;
+}
+
+bool MainWindow::getSwitchMultilevelStatus(const uint nodeId, uint &status)
+{
+    bool result {true};
+    uint8_t byteStatus {0};
+    // Lock critical section
+    pthread_mutex_lock (&g_criticalSection);
+
+    for (auto const & node : g_nodes)
+    {
+        if (node->m_nodeId == nodeId)
+        {
+            for (auto const & value : node->m_values)
+            {
+                if (value.GetCommandClassId() == SwitchMultilevel::StaticGetCommandClassId())
+                {
+                    result = Manager::Get()->GetValueAsByte(value, &byteStatus);
+                    // Avoid repetitions ...
+                    break;
+                }
+            }
+        }
+    }
+    // Unlock critical section
+    pthread_mutex_unlock (&g_criticalSection);
+    status = static_cast<uint>(byteStatus);
+    return result;
+}
+
 MainWindow::MainWindow(bool _graphic,
                        bool _silent,
                        const QString & _ttyPort,
@@ -285,6 +341,27 @@ void MainWindow::statusSet(uint devId, uint statusCode)
     {
         appendText("The OpenZWave engine is still initializing ...");
     }
+}
+
+void MainWindow::statusGet(uint deviceId)
+{
+    // Once a status request is received, we want to retrieve it from the Z-Wave controller
+    bool result {false};
+    uint currentStatus {0};
+    switch (deviceId)
+    {
+    case SWITCH_BINARY_ID:
+        result = getSwitchBinaryStatus(deviceId, currentStatus);
+        break;
+    case SWITCH_MULTILEVEL_ID:
+        result = getSwitchMultilevelStatus(deviceId, currentStatus);
+        break;
+    default:
+        appendText("Unknown device ID "
+                   + QString::number(deviceId));
+        break;
+    }
+    emit statusGetRsp(result, currentStatus);
 }
 
 void MainWindow::serverReady()

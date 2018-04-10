@@ -36,5 +36,12 @@ public:
     uint maxVal;
 };
 
+enum OPCODE
+{
+    OP_SET_VAL = 0,
+    OP_GET_VAL,
+    OP_UNKNOWN
+};
+
 
 #endif // DEFS_H_

@@ -13,8 +13,16 @@
       <arg name="requestOk"         type="b"    direction="out"/>
     </signal>
     <signal name="statusChangedCfm">
-        <arg name="nodeId"          type="u"    direction="out"/>
+      <arg name="nodeId"          type="u"    direction="out"/>
     </signal>
+    <method name="statusGet">
+      <arg name="deviceId"        type="u"    direction="in"/>
+    </method>
+    <signal name="statusGetRsp">
+      <arg name="successOp"       type="b"    direction="out"/>
+      <arg name="deviceStatus"    type="u"    direction="out"/>
+    </signal>
+
 
     <method name="serverReady">
     </method>

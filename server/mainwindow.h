@@ -74,13 +74,18 @@ public:
 
 public Q_SLOTS:
     void        statusSet(uint deviceId, uint statusCode);
+    void        statusGet(uint deviceId);
+
     void        serverReady();
     void        requestNodeTransfer();
     void        publishNrNodesAck();
     void        publishNodeDetailsAck(uint nodeId);
 
 Q_SIGNALS:
+    // Daemon informs whether the set status op was successful
     void        statusSetAck(uint requestNode, bool requestOk);
+    // Daemon informs about node's current state
+    void        statusGetRsp(bool successOp, uint deviceStatus);
     // Remote node has changed its status and confirms
     void        statusChangedCfm(uint nodeId);
     // Client asks if server ready
@@ -100,6 +105,11 @@ private:
     bool        toggleSwitchBinary(const int node_Id, bool status);
     bool        toggleSwitchMultilevel(const int node_Id,
                                        const uint8 level);
+    bool        getSwitchBinaryStatus(const uint nodeId,
+                                      uint & status);
+    bool        getSwitchMultilevelStatus(const uint nodeId,
+                                          uint & status);
+
     void        stopOpenZWave();
     bool        isValidNodeId(uint devId);
     bool        isValidValue(uint devId, uint val);
