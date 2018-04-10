@@ -6,6 +6,7 @@ if [ "$(basename $0)" == "source-me" ]; then
     exit 1
 fi
 
+if [[ -z $BITBAKE_ENV ]]; then
 # Clone OpenZWave if not done
 if [[  -d $HOME/open-zwave ]]; then
     echo "Already cloned."
@@ -13,14 +14,13 @@ else
     git clone --depth=1 https://github.com/eiger824/open-zwave.git $HOME/open-zwave
 fi
 
-if [[ -z $BITBAKE_ENV ]]; then
     # Export env variables
     export OZW_ROOT=${HOME}/open-zwave
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OZW_ROOT
 else
     # This is a BITBAKE build, then adapt these flags
     # TODO: Fix this, don't hardcode the path
-    export OZW_ROOT=${S}/../../openzwave/1.4-r0/git
+    export OZW_ROOT=${PWD}/../../../openzwave/1.4-r0/git
 fi
 
 export OZW_CPP=${OZW_ROOT}/cpp
