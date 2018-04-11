@@ -84,7 +84,10 @@ void MainWindow::appendText(QPlainTextEdit * qpt, QString const & txt, bool nl)
     {
         QChar c;
         if (!qpt->toPlainText().isEmpty())
-            c = qpt->toPlainText().back();
+        {
+            QString str = qpt->toPlainText();
+            c = str.at(str.size() -1);
+        }
         else
             qpt->setPlainText("[" + QDateTime::currentDateTime().toString() + "] ");
 
