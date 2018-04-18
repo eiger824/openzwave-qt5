@@ -23,7 +23,7 @@ $result = exec('/usr/bin/ozw-proxy-client -n15 -v'.$level);
 <br>
 <br>
 
-<a href="/index.html">Back to main page</a>
+<a href="/home.html">Back to main page</a>
 
 </div>
 </body>
