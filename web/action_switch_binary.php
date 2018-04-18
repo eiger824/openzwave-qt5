@@ -28,7 +28,7 @@ $result = exec('/usr/bin/ozw-proxy-client -n21 -v'.$status);
 <br>
 <br>
 
-<a href="/index.html">Back to main page</a>
+<a href="/home.html">Back to main page</a>
 
 </div>
 </body>
