@@ -1,6 +1,9 @@
 Please install the D-Bus configuration file under
 `common/dbus/mysland-openzwave.conf`
 in /etc/dbus-1/system.d.
+Please install the systemd init script under
+`common/systemd/mysland-openzwave.service`
+in /etc/systemd/system.
 
 This configuration file specifies that
 the only owner of the service must be the `root` user, but that
