@@ -67,9 +67,12 @@ int main(int argc, char *argv[])
             graphic = true ;
             break;
         default:
-            cerr << "Unrecognized option " << c << endl;
-            help( QString::fromStdString( std::string{argv[0]}) );
-            return 1;
+            if (static_cast<char>(c) != 'p')
+            {
+                help( QString::fromStdString( std::string{argv[0]}) );
+                return 1;
+            }
+            break;
         }
     }
 
