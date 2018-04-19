@@ -6,6 +6,13 @@
     text-align: center;
     margin: auto;
 }
+#myDIV {
+    width: 100%;
+    text-align: center;
+    background-color: #e8e8e8;
+    margin-top: 20px;
+    display: none;
+}
 </style>
 <body>
 <div class="content">
@@ -17,13 +24,44 @@
 
 $level = $_POST["multilevelSwitch"];
 echo 'Will set multilevel dimmer to level: '.$level.'.';
-$result = exec('/usr/bin/ozw-proxy-client -n15 -v'.$level);
+$result = shell_exec('/usr/bin/ozw-proxy-client -n15 -v'.$level.' 2>&1');
+$tmpfile = fopen(".status", "w");
+fwrite($tmpfile, $result);
+fclose($tmpfile);
 ?>
 
-<br>
+<br><br>
+
+<fieldset>
+    <button id="myButton" onclick="showAndHide()">(Show Info)</button>
+    <div id="myDIV">
+<?php
+    $tmpfile = fopen(".status", "r");
+    echo fgets($tmpfile);
+    fclose($tmpfile);
+?>
+    </div>
+</fieldset>
+
 <br>
 
-<a href="/home.html">Back to main page</a>
+<script>
+function showAndHide() {
+    var x = document.getElementById("myDIV");
+    var y = document.getElementById("myButton");
+    if (x.style.display === "none") {
+        x.style.display = "block";
+        y.innerHTML = "(Hide Info)";
+    } else {
+        x.style.display = "none";
+        y.innerHTML = "(Show Info)";
+    }
+}
+</script>
+
+<br><br>
+
+<a href="/index.html">Back to main page</a>
 
 </div>
 </body>
