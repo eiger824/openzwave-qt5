@@ -1,10 +1,11 @@
 [Unit]
 Description=Run the mysland OpenZWave daemon
+After=multi-user.target
 
 [Service]
-Type=oneshot
-ExecStart="/usr/bin/ozw-daemon -c /etc/openzwave -s"
-RemainAfterExit=yes
+Type=idle
+ExecStart=/usr/bin/ozw-daemon -c /etc/openzwave -s -platform eglfs
+ExecStop=/bin/kill -9 $MAINPID
 
 [Install]
 WantedBy=multi-user.target
