@@ -36,7 +36,8 @@ using std::cout;
 using std::endl;
 
 static uint32 g_homeId = 0;
-static bool   g_initFailed = false;
+static bool   g_initSuccess = false;
+static bool   silentMode = false;
 
 // List holding all currently discovered nodes
 QList<NodeInfo*> g_nodes;
@@ -58,7 +59,6 @@ QString     get_elapsed_time(uint64 usecs, timespec_t * s);
 void OpenZWaveBackgroundThread::run()
 
 {
-    bool result;
     pthread_mutexattr_t mutexattr;
     bool create_success {false};
 
@@ -109,7 +109,7 @@ void OpenZWaveBackgroundThread::run()
         // In a normal app, we would be handling notifications and building a UI for the user.
         pthread_cond_wait( &initCond, &initMutex );
     }
-    emit resultReady(result);
+    emit resultReady(g_initSuccess);
 }
 
 bool MainWindow::toggleSwitchBinary(const int node_Id, bool status)
@@ -230,13 +230,17 @@ MainWindow::MainWindow(bool _graphic,
     configPath{_configPath},
     readyToServe{false},
     dbusSuccess{true},
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
 {
-    ui->setupUi(this);
+    if (graphic)
+    {
+        ui = new Ui::MainWindow;
+        ui->setupUi(this);
+    }
     appendText("Server initialized! Listening to the bus...");
 
     instance = this;
+    silentMode = silent;
 
     setWindowTitle("OpenZWave daemon");
 
@@ -270,12 +274,14 @@ MainWindow::MainWindow(bool _graphic,
     connect(this, SIGNAL(startOZWInitialization()),
             this, SLOT(initOpenZWave()));
 
-    // Start animation
-    QMovie * movie = new QMovie(":/images/imgs/progress.gif");
-    movie->setScaledSize(ui->label_2->size());
-    ui->label_2->setMovie(movie);
-    movie->start();
-
+    if (graphic)
+    {
+        // Start animation
+        QMovie * movie = new QMovie(":/images/imgs/progress.gif");
+        movie->setScaledSize(ui->label_2->size());
+        ui->label_2->setMovie(movie);
+        movie->start();
+    }
     // Init timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(broadcastNodes()));
@@ -283,7 +289,8 @@ MainWindow::MainWindow(bool _graphic,
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+    if (graphic)
+        delete ui;
 }
 
 void MainWindow::acknowledgeTransferToNode(uint nodeId)
@@ -426,17 +433,46 @@ void MainWindow::initOpenZWave()
 void MainWindow::initOpenZWaveDone(bool res)
 {
     ts.getElapsedTime(t.elapsed() * 1e3);
-    appendText("Initialization done! Elapsed time: " + ts.toString());
-    readyToServe = true;
-    // Stop animation
-    QMovie * mv = ui->label_2->movie();
-    mv->stop();
-    delete mv;
-    QPixmap pm{":/images/imgs/check.png"};
-    ui->label_2->setPixmap(pm);
+    appendText("Initialization " +
+               ((res) ? QString::fromStdString("done.") : QString::fromStdString("failed."))
+               + " Elapsed time: " + ts.toString());
+    if (graphic)
+    {
+        // Stop animation
+        QMovie * mv = ui->label_2->movie();
+        mv->stop();
+        delete mv;
+
+        QPixmap pm;
+        if (res)
+        {
+            pm.load(":/images/imgs/check.png");
+        }
+        else
+        {
+            pm.load(":/images/imgs/warning.png");
+            appendText("The OpenZWave engine failed to initialize. Nothing will happen now.");
+        }
+        ui->label_2->setPixmap(pm);
+    }
+    else
+    {
+        if (!res)
+        {
+            appendText("The OpenZWave engine failed to initialize. The application will now exit.");
+            // Double-check that the working thread is not running
+            if (wt->isRunning())
+                wt->quit();
+            qApp->exit(1);
+        }
+    }
     // Now we want to publish the available nodes to the client
-    broadcastNodes();
-    timer->start(BROADCAST_TIMEOUT);
+    if (res)
+    {
+        broadcastNodes();
+        timer->start(BROADCAST_TIMEOUT);
+        readyToServe = true;
+    }
 }
 
 // This will be called every BROADCAST_TIMEOUT secs to notify changes to client
@@ -531,7 +567,8 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
     // Must do this inside a critical section to avoid conflicts with the main thread
     pthread_mutex_lock( &g_criticalSection );
 
-     cout << "Notification! Type = " << _notification->GetAsString() << endl;
+    if (!silentMode)
+        cout << "Notification! Type = " << _notification->GetAsString() << endl;
 
     switch( _notification->GetType() )
     {
@@ -651,7 +688,7 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
 
     case Notification::Type_DriverFailed:
     {
-        g_initFailed = true;
+        g_initSuccess = false;
         pthread_cond_broadcast(&initCond);
         break;
     }
@@ -660,6 +697,9 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
     case Notification::Type_AllNodesQueried:
     case Notification::Type_AllNodesQueriedSomeDead:
     {
+        /* Even if some nodes are dead, at least the
+            engine has completed initialization */
+        g_initSuccess = true;
         pthread_cond_broadcast(&initCond);
         break;
     }
@@ -667,12 +707,14 @@ void OnNotification ( const OpenZWave::Notification * _notification, void * _con
     case Notification::Type_DriverReset:
     case Notification::Type_Notification:
     {
-        cout << "Type Notification!! Byte is: " << static_cast<int>(_notification->GetByte()) << endl;
+        if (!silentMode)
+            cout << "Type Notification!! Byte is: " << static_cast<int>(_notification->GetByte()) << endl;
         switch (_notification->GetByte())
         {
         case Notification::NotificationCode::Code_MsgComplete:
-            cout << "Message complete for node " << static_cast<int>(_notification->GetNodeId())
-                 << "! Sending ACK over the bus..." << endl;
+            if (!silentMode)
+                cout << "Message complete for node " << static_cast<int>(_notification->GetNodeId())
+                     << "! Sending ACK over the bus..." << endl;
             MainWindow * w = MainWindow::Get();
             w->acknowledgeTransferToNode(_notification->GetNodeId());
             break;

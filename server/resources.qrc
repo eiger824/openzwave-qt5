@@ -3,5 +3,6 @@
         <file>imgs/check.png</file>
         <file>imgs/ozwlogo.png</file>
         <file>imgs/progress.gif</file>
+        <file>imgs/warning.png</file>
     </qresource>
 </RCC>

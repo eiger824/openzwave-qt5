@@ -7,12 +7,12 @@ if [ "$(basename $0)" == "source-me" ]; then
 fi
 
 if [[ -z $BITBAKE_ENV ]]; then
-# Clone OpenZWave if not done
-if [[  -d $HOME/open-zwave ]]; then
-    echo "Already cloned."
-else
-    git clone --depth=1 https://github.com/eiger824/open-zwave.git $HOME/open-zwave
-fi
+    # Clone OpenZWave if not done
+    if [[  -d $HOME/open-zwave ]]; then
+        echo "Already cloned."
+    else
+        git clone --depth=5 https://github.com/OpenZWave/open-zwave.git $HOME/open-zwave
+    fi
 
     # Export env variables
     export OZW_ROOT=${HOME}/open-zwave
