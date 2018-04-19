@@ -64,18 +64,19 @@ int main(int argc, char *argv[])
             silent = true;
             break;
         case 'x':
-            graphic = true ;
+            graphic = true;
             break;
         default:
-            if (static_cast<char>(c) != 'p')
+            if (optopt != 'p')
             {
                 help( QString::fromStdString( std::string{argv[0]}) );
                 return 1;
             }
-            break;
+            // Hack: jump out of the loop
+            goto next;
         }
     }
-
+next:
     // Check if the provided path exists, otherwise don't bother starting the program
     QDir confPath {config};
     if (!confPath.exists())
