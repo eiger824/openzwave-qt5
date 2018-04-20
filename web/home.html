@@ -123,7 +123,7 @@ input:checked + .toggle_button:before {
   <span class="toggle_button round"></span>
 </label>
 </form>
-<button type="submit" form="form1"  value="Submit">Toggle</button>
+<button id="button1" onclick="disableButton()" type="submit" form="form1"  value="Submit">Toggle</button>
 
 
 <br>
@@ -134,18 +134,22 @@ input:checked + .toggle_button:before {
     <label for="switchMultilevelSlider" id="currentSliderValue">Current value</label>
 </form>
 <br>
-<button type="submit" form="form2"  value="Submit2">Set</button>
+<button id="button2" onclick="disableButton()" type="submit" form="form2"  value="Submit2">Set</button>
 <br>
 <br>
 <img src="ozwlogo.png" width="240" height="120">
 
 <script>
     var slider = document.getElementById("switchMultilevelSlider");
-var output = document.getElementById("currentSliderValue");
-output.innerHTML = slider.value;
+    var output = document.getElementById("currentSliderValue");
+    output.innerHTML = slider.value;
 
-slider.oninput = function() {
-  output.innerHTML = this.value;
+    slider.oninput = function() {
+        output.innerHTML = this.value;
+    }
+function disableButton() {
+    document.getElementById("button1").disabled = true;
+    document.getElementById("button2").disabled = true;
 }
 </script>
 
