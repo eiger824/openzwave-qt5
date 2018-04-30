@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/usr/bin/ozw-daemon -c /etc/openzwave -s -platform eglfs
+ExecStart=/usr/bin/ozw-daemon -c /etc/openzwave -s -platform linuxfb
 ExecStop=/bin/kill -9 $MAINPID
 
 [Install]
