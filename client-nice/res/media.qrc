@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/res">
+        <file>imgs/arrow_left.png</file>
+        <file>imgs/arrow_right.png</file>
+        <file>imgs/ozwlogo.png</file>
+        <file>imgs/binary.png</file>
+        <file>imgs/multilevel.png</file>
+    </qresource>
+</RCC>

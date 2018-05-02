@@ -1,0 +1,8 @@
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
+
+#define SWITCH_BINARY_INDEX     2
+#define SWITCH_MULTILEVEL_INDEX 3
+#define LAST_PAGE_INDEX         4
+
+#endif // DEFINITIONS_H

@@ -25,10 +25,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    pagestack.cpp \
+    utils/direction_button.cpp \
+    introwidget.cpp \
+    deviceselector.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    pagestack.h \
+    utils/direction_button.h \
+    introwidget.h \
+    deviceselector.h \
+    definitions.h
 
-FORMS += \
-        mainwindow.ui
+RESOURCES += \
+    res/media.qrc
+
