@@ -4,6 +4,7 @@
 #include "pagestack.h"
 #include "introwidget.h"
 #include "deviceselector.h"
+#include "operationcomplete.h"
 
 PageStack::PageStack(QWidget *parent) : QWidget(parent)
 {
@@ -35,7 +36,11 @@ PageStack::PageStack(QWidget *parent) : QWidget(parent)
 
     stack->addWidget(new QWidget());
     stack->addWidget(new QWidget());
-    stack->addWidget(new QWidget());
+
+    OperationComplete * op = new OperationComplete;
+    connect(op, SIGNAL(clicked()),
+            this, SLOT(returnToMainPage()));
+    stack->addWidget(op);
 
     layout->addWidget(bkw);
     layout->addWidget(stack);
@@ -96,6 +101,12 @@ void PageStack::switchMultilevelSelectedSlot()
     checkPages();
 }
 
+void PageStack::returnToMainPage()
+{
+    stack->setCurrentIndex(MAIN_PAGE_INDEX);
+    checkPages();
+}
+
 /*
  * Checks whether the page buttons should be enabled or not
 */
@@ -123,9 +134,11 @@ void PageStack::checkPages()
             if (index == 0)
             {
                 bkw->disableClicks();
+                fwd->enableClicks();
             }
             else
             {
+                bkw->enableClicks();
                 fwd->disableClicks();
             }
         }

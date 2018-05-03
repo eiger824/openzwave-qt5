@@ -22,6 +22,7 @@ private slots:
     void loadNextPage();
     void switchBinarySelectedSlot();
     void switchMultilevelSelectedSlot();
+    void returnToMainPage();
 
 private:
     void checkPages();

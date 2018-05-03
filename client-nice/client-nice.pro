@@ -29,7 +29,8 @@ SOURCES += \
     pagestack.cpp \
     utils/direction_button.cpp \
     introwidget.cpp \
-    deviceselector.cpp
+    deviceselector.cpp \
+    operationcomplete.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -37,7 +38,8 @@ HEADERS += \
     utils/direction_button.h \
     introwidget.h \
     deviceselector.h \
-    definitions.h
+    definitions.h \
+    operationcomplete.h
 
 RESOURCES += \
     res/media.qrc
